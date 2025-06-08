@@ -19,7 +19,7 @@ def log():
         with open(LOG_FILE, "r") as f:
             if combined in f.read():
                 return "Duplicate ignored"
-    except FileNotFoundError:
+    except:
         pass
 
     with open(LOG_FILE, "a") as f:
@@ -37,14 +37,12 @@ def count():
         with open(LOG_FILE, "r") as f:
             lines = f.readlines()
             return f"QR linkini {len(lines)} marta ochishgan ✅"
-    except FileNotFoundError:
+    except:
         return "0"
 
-# 💡 Railway (gunicorn) uchun app obyektini export qilish
-# Bu joy muhim! Shu bo'lmasa gunicorn ishga tushmaydi
-# gunicorn main:app ← shu format ishlaydi
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
-
-# Bu satr Railway uchun shart!
+# 🔥 Railway uchun kerakli qator
 app = app
+
+# 🖥 Lokal ishga tushirish uchun (faqat Replit yoki kompyuterda)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
