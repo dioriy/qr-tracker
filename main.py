@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, abort
 from datetime import datetime
 
 app = Flask(__name__)
@@ -16,11 +16,12 @@ def log():
     combined = f"{ip_address} | {user_agent}"
 
     try:
-        with open(LOG_FILE, "r") as f:
-            if combined in f.read():
-                return "Duplicate ignored"
-    except:
-        pass
+        if os.path.exists(LOG_FILE):
+            with open(LOG_FILE, "r") as f:
+                if combined in f.read():
+                    return "Duplicate ignored"
+    except Exception as e:
+        return str(e)
 
     with open(LOG_FILE, "a") as f:
         f.write(f"{timestamp} | {combined}\n")
@@ -29,7 +30,10 @@ def log():
 
 @app.route("/")
 def index():
-    return send_file(HTML_FILE)
+    if os.path.exists(HTML_FILE):
+        return send_file(HTML_FILE)
+    else:
+        return abort(404)
 
 @app.route("/count")
 def count():
