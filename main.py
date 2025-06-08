@@ -39,10 +39,3 @@ def count():
             return f"QR linkini {len(lines)} marta ochishgan ✅"
     except:
         return "0"
-
-# 🔥 Railway uchun kerakli qator
-app = app
-
-# 🖥 Lokal ishga tushirish uchun (faqat Replit yoki kompyuterda)
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
