@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, send_file, abort
+from flask import Flask, request, send_file, abort, Response
 from datetime import datetime
 
 app = Flask(__name__)
@@ -124,6 +124,23 @@ def count():
             font-weight: bold !important;
             font-size: 1.2em !important;
         }
+        .btn-download {
+            display: inline-block;
+            margin: 16px 0 0 0;
+            background: #ffe082;
+            color: #b98600;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn-download:hover {
+            background: #fffde7;
+        }
     </style>
     </head>
     <body>
@@ -135,7 +152,6 @@ def count():
             <th>Ochilishlar soni</th>
         </tr>
     '''
-    # Jadval satrlarini to‘ldiramiz
     for date, count in sorted(stats.items()):
         html += f"<tr><td>{date}</td><td>{count}</td></tr>"
     html += f'''
@@ -144,12 +160,92 @@ def count():
             <td class="total-cell">{total}</td>
         </tr>
       </table>
+      <a class="btn-download" href="/download-csv">⬇ Excel/CSV yuklab olish</a>
     </div>
     </body>
     </html>
     '''
     return html
 
-# Lokal test uchun
+@app.route("/download-csv")
+def download_csv():
+    from collections import defaultdict
+    import datetime
+
+    stats = defaultdict(int)
+    total = 0
+    try:
+        with open(LOG_FILE, "r") as f:
+            for line in f:
+                if "|" in line:
+                    date_str = line.split("|")[0].strip()
+                    try:
+                        dt = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+                        date_only = dt.strftime("%Y-%m-%d")
+                        stats[date_only] += 1
+                        total += 1
+                    except:
+                        pass
+    except FileNotFoundError:
+        return "Sana,Son\n"
+
+    # CSV tayyorlaymiz
+    csv_data = "Sana,Ochilishlar soni\n"
+    for date, count in sorted(stats.items()):
+        csv_data += f"{date},{count}\n"
+    csv_data += f"JAMI,{total}\n"
+
+    return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=qr-statistika.csv"}
+    )
+
+@app.route("/reset", methods=["GET", "POST"])
+def reset():
+    if request.method == "POST":
+        try:
+            open(LOG_FILE, "w").close()
+            message = '''
+                <h2 style="color:#e6a100;">Statistika tozalandi! 🔄</h2>
+                <p style="font-size:1.3em;">Natijalar 0 ga tenglashtirildi.</p>
+                <a href="/count" style="color:#d4af37;font-size:1.1em;">⬅ Jadvalga qaytish</a>
+            '''
+        except:
+            message = "<b>Xatolik! log.txt topilmadi.</b>"
+        return f"""
+            <html>
+            <head><meta charset="UTF-8"></head>
+            <body style="text-align:center;padding-top:70px;font-family:Arial">
+                {message}
+            </body>
+            </html>
+        """
+    else:
+        return '''
+            <html>
+            <head><meta charset="UTF-8"></head>
+            <body style="text-align:center;padding-top:70px;font-family:Arial">
+                <h2 style="color:#e6a100;">Statistikani tozalash</h2>
+                <form method="POST">
+                    <button type="submit" style="
+                        background:#ffe082;
+                        color:#b98600;
+                        padding:12px 32px;
+                        font-size:1.18em;
+                        border:none;
+                        border-radius:8px;
+                        font-weight:bold;
+                        cursor:pointer;
+                        margin-top:24px;
+                        transition:background 0.2s;">
+                        🔄 TOZALASH
+                    </button>
+                </form>
+                <a href="/count" style="display:block;margin-top:30px;color:#d4af37;font-size:1.1em;">⬅ Jadvalga qaytish</a>
+            </body>
+            </html>
+        '''
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
