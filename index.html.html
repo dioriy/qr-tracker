@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecting...</title>
+  <meta http-equiv="refresh" content="1;url=https://t.me/aynimo_official_bot">
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem("qr_logged")) {
+      const data = {
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent
+      };
+      navigator.sendBeacon("/log", new Blob([JSON.stringify(data)], { type: "application/json" }));
+      localStorage.setItem("qr_logged", "true");
+    }
+  </script>
+</body>
+</html>
